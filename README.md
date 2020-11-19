@@ -35,17 +35,10 @@ Default training process uses hinge loss as the D_loss, also provide Wgan-GP in 
 
 For input size of 512x512 and GPU with memory of 11GB, recommended batchsize is 4.
 
-To change other training parameters, please modify train.py. You can also design your own mask through dataset.py
-
-### Testing
-In progress......
-### Pre-trained model
-Still in training......
-### Sample images
-To do
 ### Acknowledgement & Reference
 
-[1] https://github.com/zhaoyuzhi/deepfillv2
+* [https://github.com/zhaoyuzhi/deepfillv2](https://github.com/zhaoyuzhi/deepfillv2)
+* [https://github.com/wangyx240/High-Resolution-Image-Inpainting-GAN](https://github.com/wangyx240/High-Resolution-Image-Inpainting-GAN)
 
 ```bash
 @misc{yi2020contextual,

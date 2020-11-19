@@ -5,10 +5,9 @@ import time
 import cv2
 import numpy as np
 import torch
-import torch.autograd as autograd
-import torch.backends.cudnn as cudnn
-import torch.nn as nn
+from torch import autograd, nn
 from torch.autograd import Variable
+from torch.backends import cudnn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
