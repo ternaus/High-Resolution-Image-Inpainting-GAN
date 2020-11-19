@@ -9,27 +9,25 @@ from torch import nn
 from torch.nn import init
 
 from high_resolution_image_inpainting_gan.inpainting_network import (
-    GatedGenerator,
     PatchDiscriminator,
     PerceptualNet,
 )
 
-
 # ----------------------------------------
 #                 Network
 # ----------------------------------------
-def create_generator(opt):
-    # Initialize the networks
-    generator = GatedGenerator(opt)
-    print("Generator is created!")
-    if opt.load_name_g:
-        generator.load_state_dict(torch.load(opt.load_name_g))
-        print("Load generator %s" % opt.load_name_g)
-    else:
-        # Init the networks
-        weights_init(generator, init_type=opt.init_type, init_gain=opt.init_gain)
-        print("Initialize generator with %s type" % opt.init_type)
-    return generator
+# def create_generator(config):
+#     # Initialize the networks
+#     generator = GatedGenerator(config)
+#     print("Generator is created!")
+#     if config.load_name_g:
+#         generator.load_state_dict(torch.load(config.load_name_g))
+#         print("Load generator %s" % config.load_name_g)
+#     else:
+#         # Init the networks
+#         weights_init(generator, init_type=config.init_type, init_gain=config.init_gain)
+#         print("Initialize generator with %s type" % config.init_type)
+#     return generator
 
 
 def create_discriminator(opt):
@@ -102,61 +100,6 @@ def weights_init(net: nn.Module, init_type: str = "kaiming", init_gain: float = 
 
     # Apply the initialization function <init_func>
     net.apply(init_func)
-
-
-# ----------------------------------------
-#             PATH processing
-# ----------------------------------------
-def text_readlines(filename):
-    # Try to read a txt file and return a list.Return [] if there was a mistake.
-    try:
-        file = open(filename)
-    except OSError:
-        error = []
-        return error
-    content = file.readlines()
-    # This for loop deletes the EOF (like \n)
-    for i, _ in enumerate(content):
-        content[i] = content[i][: len(content[i]) - 1]
-    file.close()
-    return content
-
-
-def savetxt(name, loss_log):
-    np_loss_log = np.array(loss_log)
-    np.savetxt(name, np_loss_log)
-
-
-def get_files(path):
-    # read a folder, return the complete path
-    ret = []
-    for root, _, files in os.walk(path):
-        for filespath in files:
-            ret.append(os.path.join(root, filespath))
-    return ret
-
-
-def get_names(path):
-    # read a folder, return the image name
-    ret = []
-    for _, _, files in os.walk(path):
-        for filespath in files:
-            ret.append(filespath)
-    return ret
-
-
-def text_save(content, filename, mode="a"):
-    # save a list to a txt
-    # Try to save a list variable in txt file.
-    file = open(filename, mode)
-    for c in content:
-        file.write(str(c) + "\n")
-    file.close()
-
-
-def check_path(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
 
 
 # ----------------------------------------
