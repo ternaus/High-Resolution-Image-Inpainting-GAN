@@ -8,7 +8,6 @@ train_parameters:
   lr_d: 0.0004 # Adam learning rate
   batch_size: 4
   lambda_perceptual: 100 # the parameter of FML1Loss (perceptual loss)
-  mask_type: free_form # 'single_bbox' or 'bbox'
   image_size: 512
   weight_decay: 0
   lr_decrease_epoch: 10 # lr decrease at certain epoch and its multiple
@@ -16,7 +15,8 @@ train_parameters:
   lambda_l1: 256 # the parameter of L1Loss
 
 
-save_path: "./models"
+experiment_name: "2020-11-18"
+
 sample_path: "./samples"
 gan_type: "WGAN"
 checkpoint_interval: 1 # interval between model checkpoints
@@ -30,5 +30,3 @@ norm1: none
 norm: none
 init_type: kaiming
 init_gain: 0.2
-
-baseroot: "./dataset/data_large" # the training folder: val_256, test_large, data_256
