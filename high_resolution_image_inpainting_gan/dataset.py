@@ -1,20 +1,23 @@
 import os
+
 import cv2
 import numpy as np
 import torch
-from torchvision import transforms
 from torch.utils.data import Dataset
 
-import utils
+from high_resolution_image_inpainting_gan import utils
 
-ALLMASKTYPES = ['single_bbox', 'bbox', 'free_form']
+# from torchvision import transforms
+
+ALLMASKTYPES = ["single_bbox", "bbox", "free_form"]
+
 
 class InpaintDataset(Dataset):
     def __init__(self, opt):
         assert opt.mask_type in ALLMASKTYPES
         self.opt = opt
         self.imglist = utils.get_files(opt.baseroot)
-        #self.imglist=self.imglist[0:300]
+        # self.imglist=self.imglist[0:300]
 
     def __len__(self):
         return len(self.imglist)
@@ -23,22 +26,26 @@ class InpaintDataset(Dataset):
         # image
         img = cv2.imread(self.imglist[index])
         if self.imglist[index]:
-            try:
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            except:
-                print(self.imglist[index])
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
             img = cv2.resize(img, (self.opt.imgsize, self.opt.imgsize))
         else:
-            print(self.imglist[index],11)
+            print(self.imglist[index], 11)
         # mask
-        if self.opt.mask_type == 'single_bbox':
-            mask = self.bbox2mask(shape = self.opt.imgsize, margin = self.opt.margin, bbox_shape = self.opt.bbox_shape, times = 1)
-        if self.opt.mask_type == 'bbox':
-            mask = self.bbox2mask(shape = self.opt.imgsize, margin = self.opt.margin, bbox_shape = self.opt.bbox_shape, times = self.opt.mask_num)
-        if self.opt.mask_type == 'free_form':
-            #mask = self.random_ff_mask(shape = self.opt.imgsize, max_angle = self.opt.max_angle, max_len = self.opt.max_len, max_width = self.opt.max_width, times = self.opt.mask_num)
+        if self.opt.mask_type == "single_bbox":
+            mask = self.bbox2mask(
+                shape=self.opt.imgsize, margin=self.opt.margin, bbox_shape=self.opt.bbox_shape, times=1
+            )
+        if self.opt.mask_type == "bbox":
+            mask = self.bbox2mask(
+                shape=self.opt.imgsize, margin=self.opt.margin, bbox_shape=self.opt.bbox_shape, times=self.opt.mask_num
+            )
+        if self.opt.mask_type == "free_form":
+            # mask = self.random_ff_mask(shape = self.opt.imgsize,
+            # max_angle = self.opt.max_angle, max_len = self.opt.max_len,
+            # max_width = self.opt.max_width, times = self.opt.mask_num)
             mask = self.generate_stroke_mask([self.opt.imgsize, self.opt.imgsize])
-        
+
         # the outputs are entire image and mask, respectively
         img = torch.from_numpy(img.astype(np.float32) / 255.0).permute(2, 0, 1).contiguous()
         mask = torch.from_numpy(mask.astype(np.float32)).permute(2, 0, 1).contiguous()
@@ -47,13 +54,14 @@ class InpaintDataset(Dataset):
 
     def generate_stroke_mask(self, im_size, parts=7, maxVertex=25, maxLength=80, maxBrushWidth=80, maxAngle=360):
         mask = np.zeros((im_size[0], im_size[1], 1), dtype=np.float32)
-        for i in range(parts):
+        for _ in range(parts):
             mask = mask + self.np_free_form_mask(maxVertex, maxLength, maxBrushWidth, maxAngle, im_size[0], im_size[1])
         mask = np.minimum(mask, 1.0)
 
         return mask
 
-    def np_free_form_mask(self, maxVertex, maxLength, maxBrushWidth, maxAngle, h, w):
+    @staticmethod
+    def np_free_form_mask(maxVertex, maxLength, maxBrushWidth, maxAngle, h, w):
         mask = np.zeros((h, w, 1), np.float32)
         numVertex = np.random.randint(maxVertex + 1)
         startY = np.random.randint(h)
@@ -102,11 +110,13 @@ class InpaintDataset(Dataset):
     #             cv2.line(mask, (start_y, start_x), (end_y, end_x), 1.0, brush_w)
     #             start_x, start_y = end_x, end_y
     #     return mask.reshape((1, ) + mask.shape).astype(np.float32)
-    
-    def random_bbox(self, shape, margin, bbox_shape):
+
+    @staticmethod
+    def random_bbox(shape, margin, bbox_shape):
         """Generate a random tlhw with configuration.
         Args:
-            config: Config should have configuration including IMG_SHAPES, VERTICAL_MARGIN, HEIGHT, HORIZONTAL_MARGIN, WIDTH.
+            config: Config should have configuration including IMG_SHAPES,
+            VERTICAL_MARGIN, HEIGHT, HORIZONTAL_MARGIN, WIDTH.
         Returns:
             tuple: (top, left, height, width)
         """
@@ -118,11 +128,11 @@ class InpaintDataset(Dataset):
         hor_margin = margin
         maxt = img_height - ver_margin - height
         maxl = img_width - hor_margin - width
-        t = np.random.randint(low = ver_margin, high = maxt)
-        l = np.random.randint(low = hor_margin, high = maxl)
+        t = np.random.randint(low=ver_margin, high=maxt)
+        tl = np.random.randint(low=hor_margin, high=maxl)
         h = height
         w = width
-        return (t, l, h, w)
+        return (t, tl, h, w)
 
     def bbox2mask(self, shape, margin, bbox_shape, times):
         """Generate mask tensor from bbox.
@@ -134,7 +144,7 @@ class InpaintDataset(Dataset):
             tf.Tensor: output with shape [1, H, W, 1]
         """
         bboxs = []
-        for i in range(times):
+        for _ in range(times):
             bbox = self.random_bbox(shape, margin, bbox_shape)
             bboxs.append(bbox)
         height = shape
@@ -143,9 +153,10 @@ class InpaintDataset(Dataset):
         for bbox in bboxs:
             h = int(bbox[2] * 0.1) + np.random.randint(int(bbox[2] * 0.2 + 1))
             w = int(bbox[3] * 0.1) + np.random.randint(int(bbox[3] * 0.2) + 1)
-            mask[(bbox[0] + h) : (bbox[0] + bbox[2] - h), (bbox[1] + w) : (bbox[1] + bbox[3] - w)] = 1.
-        return mask.reshape((1, ) + mask.shape).astype(np.float32)
-        
+            mask[(bbox[0] + h) : (bbox[0] + bbox[2] - h), (bbox[1] + w) : (bbox[1] + bbox[3] - w)] = 1.0
+        return mask.reshape((1,) + mask.shape).astype(np.float32)
+
+
 class ValidationSet_with_Known_Mask(Dataset):
     def __init__(self, opt):
         self.opt = opt
@@ -161,10 +172,11 @@ class ValidationSet_with_Known_Mask(Dataset):
         img = cv2.imread(imgpath)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img, (self.opt.imgsize, self.opt.imgsize))
+
         # mask
         maskpath = os.path.join(self.opt.maskroot, imgname)
-        img = cv2.imread(maskpath, cv2.IMREAD_GRAYSCALE)
+        mask = cv2.imread(maskpath, cv2.IMREAD_GRAYSCALE)
         # the outputs are entire image and mask, respectively
-        img = torch.from_numpy(img.astype(np.float32) / 255.0).permute(2, 0, 1).contiguous()
+        mask = torch.from_numpy(mask.astype(np.float32) / 255.0).permute(2, 0, 1).contiguous()
         mask = torch.from_numpy(mask.astype(np.float32)).unsqueeze(0).contiguous()
         return img, mask, imgname
