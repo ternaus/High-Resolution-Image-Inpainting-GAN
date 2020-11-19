@@ -35,8 +35,7 @@ def gradient_penalty(netD, real_data, fake_data, mask):
         only_inputs=True,
     )[0]
 
-    gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() * 10
-    return gradient_penalty
+    return ((gradients.norm(2, dim=1) - 1) ** 2).mean() * 10
 
 
 def WGAN_trainer(opt):

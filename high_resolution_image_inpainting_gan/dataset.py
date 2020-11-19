@@ -3,11 +3,10 @@ import os
 import cv2
 import numpy as np
 import torch
+from iglovikov_helper_functions.utils.image_utils import load_rgb
 from torch.utils.data import Dataset
 
 from high_resolution_image_inpainting_gan import utils
-
-# from torchvision import transforms
 
 ALLMASKTYPES = ["single_bbox", "bbox", "free_form"]
 
@@ -17,20 +16,15 @@ class InpaintDataset(Dataset):
         assert opt.mask_type in ALLMASKTYPES
         self.opt = opt
         self.imglist = utils.get_files(opt.baseroot)
-        # self.imglist=self.imglist[0:300]
 
     def __len__(self):
         return len(self.imglist)
 
     def __getitem__(self, index):
         # image
-        img = cv2.imread(self.imglist[index])
-        if self.imglist[index]:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        image = load_rgb(self.imglist[index])
+        image = cv2.resize(image, (self.opt.imgsize, self.opt.imgsize))
 
-            img = cv2.resize(img, (self.opt.imgsize, self.opt.imgsize))
-        else:
-            print(self.imglist[index], 11)
         # mask
         if self.opt.mask_type == "single_bbox":
             mask = self.bbox2mask(
@@ -47,18 +41,17 @@ class InpaintDataset(Dataset):
             mask = self.generate_stroke_mask([self.opt.imgsize, self.opt.imgsize])
 
         # the outputs are entire image and mask, respectively
-        img = torch.from_numpy(img.astype(np.float32) / 255.0).permute(2, 0, 1).contiguous()
+        image = torch.from_numpy(image.astype(np.float32) / 255.0).permute(2, 0, 1).contiguous()
         mask = torch.from_numpy(mask.astype(np.float32)).permute(2, 0, 1).contiguous()
 
-        return img, mask
+        return image, mask
 
     def generate_stroke_mask(self, im_size, parts=7, maxVertex=25, maxLength=80, maxBrushWidth=80, maxAngle=360):
         mask = np.zeros((im_size[0], im_size[1], 1), dtype=np.float32)
         for _ in range(parts):
             mask = mask + self.np_free_form_mask(maxVertex, maxLength, maxBrushWidth, maxAngle, im_size[0], im_size[1])
-        mask = np.minimum(mask, 1.0)
 
-        return mask
+        return np.minimum(mask, 1.0)
 
     @staticmethod
     def np_free_form_mask(maxVertex, maxLength, maxBrushWidth, maxAngle, h, w):
