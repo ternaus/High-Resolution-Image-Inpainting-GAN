@@ -17,20 +17,9 @@ Dataset: Download <a href="http://places2.csail.mit.edu/download.html">Places365
 
 ### Training
 ```bash
-python train.py     --epochs 40
-                    --lr_g 0.0001
-                    --batch_size 4
-                    --lambda_perceptual 100
-                    --lambda_l1 300 [feel free to change during training]
-                    --baseroot [the path of training set]
-                    --mask_type 'free_form' [or 'single_bbox' or 'bbox']
-                    --imgsize 512
+python train.py -c <path_to_config>
 ```
-```bash
-if you have more than one GPU, please change following codes:
-python train.py     --multi_gpu True
-                    --gpu_ids [the ids of your multi-GPUs]
-```
+
 Default training process uses hinge loss as the D_loss, also provide Wgan-GP in the code.
 
 For input size of 512x512 and GPU with memory of 11GB, recommended batchsize is 4.

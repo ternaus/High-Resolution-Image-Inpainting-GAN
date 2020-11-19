@@ -5,6 +5,7 @@ import numpy as np
 import skimage
 import torch
 import torchvision.models as models
+from torch import nn
 from torch.nn import init
 
 from high_resolution_image_inpainting_gan.inpainting_network import (
@@ -71,7 +72,7 @@ def load_dict(process_net, pretrained_net):
     return process_net
 
 
-def weights_init(net, init_type="kaiming", init_gain=0.02):
+def weights_init(net: nn.Module, init_type: str = "kaiming", init_gain: float = 0.02) -> None:
     """Initialize network weights.
     Parameters:
         net (network)       -- network to be initialized
