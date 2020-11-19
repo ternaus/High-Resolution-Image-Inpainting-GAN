@@ -233,18 +233,3 @@ def WGAN_trainer(opt):
         # Save the model
         save_model(generator, epoch, opt)
         save_model(discriminator, epoch, opt, is_D=True)
-
-        # ## Sample data every epoch
-        # if (epoch + 1) % 1 == 0:
-        #     masked_img = img * (1 - mask) + mask
-        #     img_save = torch.cat((img, masked_img, first_out, second_out, first_out_wholeimg,
-        #     second_out_wholeimg), 3)
-        #     img_save = img_save * 255
-        #     img_copy = img_save.clone().data.permute(0, 2, 3, 1)[0, :, :, :].cpu().numpy()
-        #     img_copy = np.clip(img_copy, 0, 255)
-        #     img_copy = img_copy.astype(np.uint8)
-        #     # Save to certain path
-        #     save_img_name = 'epoch' + str(epoch + 1) + 'sample' + '.png'
-        #     save_img_path = os.path.join(sample_folder, save_img_name)
-        #     img_copy = cv2.cvtColor(img_copy, cv2.COLOR_RGB2BGR)
-        #     cv2.imwrite(save_img_path, img_copy)
