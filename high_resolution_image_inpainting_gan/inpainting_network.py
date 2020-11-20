@@ -4,10 +4,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from high_resolution_image_inpainting_gan.network_module import (  # TransposeGatedConv2d,
-    Conv2dLayer,
-    GatedConv2d,
-)
+from high_resolution_image_inpainting_gan.network_module import Conv2dLayer, GatedConv2d
 
 
 class Coarse(nn.Module):
@@ -78,9 +75,7 @@ class Coarse(nn.Module):
         first_out = self.coarse6(first_out) + first_out
         first_out = self.coarse7(first_out) + first_out
         first_out = self.coarse8(first_out) + first_out
-        first_out = self.coarse9(first_out)
-        # return torch.clamp(first_out, 0, 1)
-        return first_out
+        return self.coarse9(first_out)
 
 
 class GatedGenerator(nn.Module):
@@ -175,7 +170,6 @@ class GatedGenerator(nn.Module):
 
         # out: [B, 3, H, W]
         second_out = self.refinement9(second_out)
-        # second_out = torch.clamp(second_out, 0, 1)
         return first_out, second_out
 
     @staticmethod
