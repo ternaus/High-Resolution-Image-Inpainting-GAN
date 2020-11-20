@@ -17,8 +17,7 @@ class Coarse(nn.Module):
     Output: filled image
     """
 
-    # def __init__(self, config):
-    def __init__(self, norm, activation):
+    def __init__(self, norm: str, activation: str) -> None:
         super().__init__()
         # Initialize the padding scheme
         self.coarse1 = nn.Sequential(
@@ -83,8 +82,7 @@ class Coarse(nn.Module):
 
 
 class GatedGenerator(nn.Module):
-    # def __init__(self, config):
-    def __init__(self, norm, activation):
+    def __init__(self, norm: str, activation: str) -> None:
         super().__init__()
 
         # ######################################### Coarse Network ##################################################
@@ -96,7 +94,6 @@ class GatedGenerator(nn.Module):
             GatedConv2d(32, 32, 3, 1, 1, 1, "replicate", activation, norm),
         )
         self.refinement2 = nn.Sequential(
-            # encoder
             GatedConv2d(32, 64, 3, 2, 1, 1, "replicate", activation, norm),
             GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm),
         )
@@ -110,8 +107,8 @@ class GatedGenerator(nn.Module):
             GatedConv2d(128, 128, 3, 1, 4, 4, "replicate", activation, norm),
         )
         self.refinement6 = nn.Sequential(
-            GatedConv2d(128, 128, 3, 1, 8, 8, activation, norm),
-            GatedConv2d(128, 128, 3, 1, 16, 16, activation, norm),
+            GatedConv2d(128, 128, 3, 1, 8, 8, "replicate", activation, norm),
+            GatedConv2d(128, 128, 3, 1, 16, 16, "replicate", activation, norm),
         )
         self.refinement7 = nn.Sequential(
             GatedConv2d(256, 128, 3, 1, 1, 1, "replicate", activation, norm),
@@ -127,28 +124,28 @@ class GatedGenerator(nn.Module):
             GatedConv2d(32, 3, 3, 1, 1, 1, "replicate", "none", norm),
             nn.Tanh(),
         )
-        self.conv_pl3 = nn.Sequential(GatedConv2d(128, 128, 3, 1, 1, 1, "repicate", activation, norm))
+        self.conv_pl3 = nn.Sequential(GatedConv2d(128, 128, 3, 1, 1, 1, "replicate", activation, norm))
         self.conv_pl2 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 1, 1, "repicate", activation, norm),
-            GatedConv2d(64, 64, 3, 1, 2, 2, "repicate", activation, norm),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm),
+            GatedConv2d(64, 64, 3, 1, 2, 2, "replicate", activation, norm),
         )
         self.conv_pl1 = nn.Sequential(
-            GatedConv2d(32, 32, 3, 1, 1, 1, "repicate", activation, norm),
-            GatedConv2d(32, 32, 3, 1, 2, 2, "repicate", activation, norm),
+            GatedConv2d(32, 32, 3, 1, 1, 1, "replicate", activation, norm),
+            GatedConv2d(32, 32, 3, 1, 2, 2, "replicate", activation, norm),
         )
 
     def forward(self, image: torch.Tensor, mask: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        img_256 = F.interpolate(image, size=[256, 256], mode="bilinear")
-        mask_256 = F.interpolate(mask, size=[256, 256], mode="nearest")  # 1 - hole, 0 - non hole
+        img_256 = F.interpolate(image, scale_factor=0.5, mode="bilinear")
+        mask_256 = F.interpolate(mask, scale_factor=0.5, mode="nearest")  # 1 - hole, 0 - non hole
 
         first_masked_img = img_256 * (1 - mask_256) + mask_256  # image with hole == 1
 
         first_in = torch.cat((first_masked_img, mask_256), 1)  # in: [B, 4, H, W]x
         first_out = self.coarse(first_in)  # out: [B, 3, H, W]
-        first_out = F.interpolate(first_out, size=[512, 512], mode="bilinear")
+        first_out = F.interpolate(first_out, scale_factor=2, mode="bilinear")  # coarse image
 
         # Refinement
-        second_in = image * (1 - mask) + first_out * mask
+        second_in = image * (1 - mask) + first_out * mask  # image with hole == 1
         pl1 = self.refinement1(second_in)  # out: [B, 32, 256, 256]
         pl2 = self.refinement2(pl1)  # out: [B, 64, 128, 128]
         second_out = self.refinement3(pl2)  # out: [B, 128, 64, 64]
@@ -191,18 +188,20 @@ class GatedGenerator(nn.Module):
         return F.softmax(c, dim=2) * p_matrix
 
     def attention_transfer(self, feature, attention):  # feature: [B, C, H, W]
-        b_num, c, h, w = feature.shape
+        batch_size, num_channels, height, width = feature.shape
         f = self.extract_image_patches(feature, 32)
-        f = torch.reshape(f, [b_num, f.shape[1] * f.shape[2], -1])
+        f = torch.reshape(f, [batch_size, f.shape[1] * f.shape[2], -1])
         f = torch.bmm(attention, f)
-        f = torch.reshape(f, [b_num, 32, 32, h // 32, w // 32, c])
+        f = torch.reshape(f, [batch_size, 32, 32, height // 32, width // 32, num_channels])
         f = f.permute([0, 5, 1, 3, 2, 4])
-        return torch.reshape(f, [b_num, c, h, w])
+        return torch.reshape(f, [batch_size, num_channels, height, width])
 
     @staticmethod
     def extract_image_patches(img, patch_num):
-        b, c, h, w = img.shape
-        img = torch.reshape(img, [b, c, patch_num, h // patch_num, patch_num, w // patch_num])
+        batch_size, num_channels, height, width = img.shape
+        img = torch.reshape(
+            img, [batch_size, num_channels, patch_num, height // patch_num, patch_num, width // patch_num]
+        )
         img = img.permute([0, 2, 4, 3, 5, 1])
         return img
 

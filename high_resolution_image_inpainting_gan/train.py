@@ -31,7 +31,7 @@ class Inpainting(pl.LightningModule):
         self.config = config
         self.generator = object_from_dict(self.config["generator"])
 
-        self.losses = {"l1": nn.L1Loss}
+        self.losses = {"l1": nn.L1Loss()}
 
     def forward(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:  # type: ignore
         return self.generator(**batch)
@@ -61,12 +61,9 @@ class Inpainting(pl.LightningModule):
         return result
 
     def configure_optimizers(self):
-        fine_generator_parameters = [x for x in self.generator.parameters() if x.requires_grad]
-        coarse_generator_parameters = [x for x in self.generator.coarse.parameters() if x.requires_grad]
-
         optimizer = object_from_dict(
-            self.config["optimizer"],
-            params=fine_generator_parameters + coarse_generator_parameters,
+            self.config["optimizer_generator"],
+            params=[x for x in self.generator.parameters() if x.requires_grad],
         )
 
         scheduler = object_from_dict(self.config["scheduler"], optimizer=optimizer)
@@ -95,8 +92,10 @@ class Inpainting(pl.LightningModule):
         )
 
         self.log("first_mask_l1", first_mask_l1_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
-        self.log("second_mask_l1", first_mask_l1_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
+        self.log("second_mask_l1", second_mask_l1_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
         self.log("total_loss", total_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
+
+        return total_loss
 
     def _get_current_lr(self) -> torch.Tensor:
         lr = [x["lr"] for x in self.optimizers[0].param_groups][0]  # type: ignore

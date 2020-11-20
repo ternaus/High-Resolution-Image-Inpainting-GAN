@@ -35,7 +35,7 @@ class Conv2dLayer(nn.Module):
     ):
         super().__init__()
 
-        self.pad_type = replicate_dict[pad_type](padding)
+        self.pad = replicate_dict[pad_type](padding)
         self.norm = bn_dict[norm](out_channels)
         self.activation = activation_dict[activation]
 
@@ -88,10 +88,9 @@ class TransposeConv2dLayer(nn.Module):
             spectral_norm,
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.interpolate(x, scale_factor=self.scale_factor, mode="nearest")
-        x = self.conv2d(x)
-        return x
+        return self.conv2d(x)
 
 
 class depth_separable_conv(nn.Module):
@@ -152,7 +151,7 @@ class GatedConv2d(nn.Module):
     ) -> None:
         super().__init__()
 
-        self.pad_type = replicate_dict[pad_type](padding)
+        self.pad = replicate_dict[pad_type](padding)
         self.norm = bn_dict[norm](out_channels)
         self.activation = activation_dict[activation]
 

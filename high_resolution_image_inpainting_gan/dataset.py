@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import albumentations as albu
 import torch
@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 
 
 class InpaintDataset(Dataset):
-    def __init__(self, image_paths: List[Path], transform: albu.Compose, length: int = None) -> None:
+    def __init__(self, image_paths: List[Path], transform: albu.Compose, length: Optional[int] = None) -> None:
         self.image_paths = image_paths
         self.transform = transform
 
@@ -19,7 +19,7 @@ class InpaintDataset(Dataset):
         else:
             self.length = length
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.length
 
     def __getitem__(self, index: int) -> Dict[str, torch.Tensor]:
@@ -27,4 +27,4 @@ class InpaintDataset(Dataset):
         image = self.transform(image=image)["image"]
 
         mask = generate_stroke_mask((image.shape[1], image.shape[0]))
-        return {"image": tensor_from_rgb_image(image), "mask": tensor_from_rgb_image(mask)}
+        return {"image": tensor_from_rgb_image(image), "mask": torch.unsqueeze(torch.from_numpy(mask), 0)}
