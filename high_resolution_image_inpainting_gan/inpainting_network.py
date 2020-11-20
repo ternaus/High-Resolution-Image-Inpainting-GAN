@@ -23,49 +23,49 @@ class Coarse(nn.Module):
         # Initialize the padding scheme
         self.coarse1 = nn.Sequential(
             # encoder
-            GatedConv2d(4, 32, 5, 2, 2, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(32, 32, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(32, 64, 3, 2, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(4, 32, 5, 2, 2, 1, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(32, 32, 3, 1, 1, 1, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(32, 64, 3, 2, 1, 1, "replicate", activation, norm, single_channel_conv=True),
         )
         self.coarse2 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm, single_channel_conv=True),
         )
         self.coarse3 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm, single_channel_conv=True),
         )
         self.coarse4 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 2, dilation=2, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 2, dilation=2, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 2, dilation=2, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 2, 2, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 2, 2, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 2, 2, "replicate", activation, norm, single_channel_conv=True),
         )
         self.coarse5 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 4, dilation=4, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 4, dilation=4, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 4, dilation=4, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 4, 4, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 4, 4, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 4, 4, "replicate", activation, norm, single_channel_conv=True),
         )
         self.coarse6 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 8, dilation=8, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 8, dilation=8, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 8, dilation=8, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 8, 8, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 8, 8, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 8, 8, "replicate", activation, norm, single_channel_conv=True),
         )
         self.coarse7 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 16, dilation=16, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 16, dilation=16, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 16, 16, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 16, 16, "replicate", activation, norm, single_channel_conv=True),
         )
         self.coarse8 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm, single_channel_conv=True),
         )
         # decoder
         self.coarse9 = nn.Sequential(
-            TransposeGatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
-            TransposeGatedConv2d(64, 32, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
-            GatedConv2d(32, 3, 3, 1, 1, activation="none", norm=norm, single_channel_conv=True),
+            TransposeGatedConv2d(64, 64, 3, 1, 1, 1, "zero", activation, norm, single_channel_conv=True),
+            TransposeGatedConv2d(64, 32, 3, 1, 1, 1, "zero", activation, norm, single_channel_conv=True),
+            GatedConv2d(32, 3, 3, 1, 1, 1, "replicate", "none", norm, single_channel_conv=True),
             nn.Tanh(),
         )
 
@@ -92,49 +92,49 @@ class GatedGenerator(nn.Module):
 
         # ######################################### Refinement Network ##########################################
         self.refinement1 = nn.Sequential(
-            GatedConv2d(3, 32, 5, 2, 2, activation=activation, norm=norm),  # [B,32,256,256]
-            GatedConv2d(32, 32, 3, 1, 1, activation=activation, norm=norm),
+            GatedConv2d(3, 32, 5, 2, 2, 1, "replicate", activation, norm),  # [B,32,256,256]
+            GatedConv2d(32, 32, 3, 1, 1, 1, "replicate", activation, norm),
         )
         self.refinement2 = nn.Sequential(
             # encoder
-            GatedConv2d(32, 64, 3, 2, 1, activation=activation, norm=norm),
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm),
+            GatedConv2d(32, 64, 3, 2, 1, 1, "replicate", activation, norm),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm),
         )
-        self.refinement3 = nn.Sequential(GatedConv2d(64, 128, 3, 2, 1, activation=activation, norm=norm))
+        self.refinement3 = nn.Sequential(GatedConv2d(64, 128, 3, 2, 1, 1, "replicate", activation, norm))
         self.refinement4 = nn.Sequential(
-            GatedConv2d(128, 128, 3, 1, 1, activation=activation, norm=norm),
-            GatedConv2d(128, 128, 3, 1, 1, activation=activation, norm=norm),
+            GatedConv2d(128, 128, 3, 1, 1, 1, "replicate", activation, norm),
+            GatedConv2d(128, 128, 3, 1, 1, 1, "replicate", activation, norm),
         )
         self.refinement5 = nn.Sequential(
-            GatedConv2d(128, 128, 3, 1, 2, dilation=2, activation=activation, norm=norm),
-            GatedConv2d(128, 128, 3, 1, 4, dilation=4, activation=activation, norm=norm),
+            GatedConv2d(128, 128, 3, 1, 2, 2, "replicate", activation, norm),
+            GatedConv2d(128, 128, 3, 1, 4, 4, "replicate", activation, norm),
         )
         self.refinement6 = nn.Sequential(
-            GatedConv2d(128, 128, 3, 1, 8, dilation=8, activation=activation, norm=norm),
-            GatedConv2d(128, 128, 3, 1, 16, dilation=16, activation=activation, norm=norm),
+            GatedConv2d(128, 128, 3, 1, 8, 8, activation, norm),
+            GatedConv2d(128, 128, 3, 1, 16, 16, activation, norm),
         )
         self.refinement7 = nn.Sequential(
-            GatedConv2d(256, 128, 3, 1, 1, activation=activation, norm=norm),
-            TransposeGatedConv2d(128, 64, 3, 1, 1, activation=activation, norm=norm),
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm),
+            GatedConv2d(256, 128, 3, 1, 1, 1, "replicate", activation, norm),
+            TransposeGatedConv2d(128, 64, 3, 1, 1, 1, "zero", activation, norm),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm),
         )
         self.refinement8 = nn.Sequential(
-            TransposeGatedConv2d(128, 64, 3, 1, 1, activation=activation, norm=norm),
-            GatedConv2d(64, 32, 3, 1, 1, activation=activation, norm=norm),
+            TransposeGatedConv2d(128, 64, 3, 1, 1, 1, "zero", activation, norm),
+            GatedConv2d(64, 32, 3, 1, 1, 1, "replicate", activation, norm),
         )
         self.refinement9 = nn.Sequential(
-            TransposeGatedConv2d(64, 32, 3, 1, 1, activation=activation, norm=norm),
-            GatedConv2d(32, 3, 3, 1, 1, activation="none", norm=norm),
+            TransposeGatedConv2d(64, 32, 3, 1, 1, 1, "zero", activation, norm),
+            GatedConv2d(32, 3, 3, 1, 1, 1, "replicate", "none", norm),
             nn.Tanh(),
         )
-        self.conv_pl3 = nn.Sequential(GatedConv2d(128, 128, 3, 1, 1, activation=activation, norm=norm))
+        self.conv_pl3 = nn.Sequential(GatedConv2d(128, 128, 3, 1, 1, 1, "repicate", activation, norm))
         self.conv_pl2 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm),
-            GatedConv2d(64, 64, 3, 1, 2, dilation=2, activation=activation, norm=norm),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "repicate", activation, norm),
+            GatedConv2d(64, 64, 3, 1, 2, 2, "repicate", activation, norm),
         )
         self.conv_pl1 = nn.Sequential(
-            GatedConv2d(32, 32, 3, 1, 1, activation=activation, norm=norm),
-            GatedConv2d(32, 32, 3, 1, 2, dilation=2, activation=activation, norm=norm),
+            GatedConv2d(32, 32, 3, 1, 1, 1, "repicate", activation, norm),
+            GatedConv2d(32, 32, 3, 1, 2, 2, "repicate", activation, norm),
         )
 
     def forward(self, image: torch.Tensor, mask: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -222,12 +222,12 @@ class PatchDiscriminator(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.block1 = Conv2dLayer(4, 64, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
-        self.block2 = Conv2dLayer(64, 128, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
-        self.block3 = Conv2dLayer(128, 256, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
-        self.block4 = Conv2dLayer(256, 256, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
-        self.block5 = Conv2dLayer(256, 256, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
-        self.block6 = Conv2dLayer(256, 16, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
+        self.block1 = Conv2dLayer(4, 64, 3, 2, 1, 1, "repicate", "lrelu", "in", spectral_norm=True)
+        self.block2 = Conv2dLayer(64, 128, 3, 2, 1, 1, "repicate", "lrelu", "in", spectral_norm=True)
+        self.block3 = Conv2dLayer(128, 256, 3, 2, 1, "repicate", "lrelu", "in", spectral_norm=True)
+        self.block4 = Conv2dLayer(256, 256, 3, 2, 1, 1, "repicate", "lrelu", "in", spectral_norm=True)
+        self.block5 = Conv2dLayer(256, 256, 3, 2, 1, 1, "repicate", "lrelu", "in", spectral_norm=True)
+        self.block6 = Conv2dLayer(256, 16, 3, 2, 1, 1, "repicate", "lrelu", "in", spectral_norm=True)
         self.block7 = torch.nn.Linear(1024, 1)
 
     def forward(self, image: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
