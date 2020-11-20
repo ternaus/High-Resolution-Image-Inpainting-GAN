@@ -114,27 +114,6 @@ class depth_separable_conv(nn.Module):
         return self.point_conv(out)
 
 
-class SingleChannelConv(nn.Module):
-    """
-    Normal conv but with output to the 1 channel.
-    """
-
-    def __init__(self, in_ch: int, kernel_size: int, stride: int, padding: int, dilation: int) -> None:
-        super().__init__()
-        self.single_channel_conv = nn.Conv2d(
-            in_channels=in_ch,
-            out_channels=1,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=padding,
-            dilation=dilation,
-            groups=1,
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.single_channel_conv(x)
-
-
 class GatedConv2d(nn.Module):
     def __init__(
         self,
@@ -158,7 +137,7 @@ class GatedConv2d(nn.Module):
         # Initialize the convolution layers
         if single_channel_conv:
             self.conv2d = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=0, dilation=dilation)
-            self.mask_conv2d = SingleChannelConv(in_channels, kernel_size, stride, padding=0, dilation=dilation)
+            self.mask_conv2d = nn.Conv2d(in_channels, 1, kernel_size, stride, padding=0, dilation=dilation, groups=1)
         else:
             self.conv2d = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=0, dilation=dilation)
             self.mask_conv2d = depth_separable_conv(
@@ -167,8 +146,8 @@ class GatedConv2d(nn.Module):
 
         self.sigmoid = torch.nn.Sigmoid()
 
-    def forward(self, x_in):
-        x = self.pad(x_in)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.pad(x)
         conv = self.conv2d(x)
         mask = self.mask_conv2d(x)
         if self.norm:
@@ -177,42 +156,6 @@ class GatedConv2d(nn.Module):
             conv = self.activation(conv)
         gated_mask = self.sigmoid(mask)
         return conv * gated_mask
-
-
-class TransposeGatedConv2d(nn.Module):
-    def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: int,
-        stride: int = 1,
-        padding: int = 0,
-        dilation: int = 1,
-        pad_type: str = "zero",
-        activation: str = "lrelu",
-        norm: str = "none",
-        single_channel_conv: bool = False,
-        scale_factor: int = 2,
-    ):
-        super().__init__()
-        # Initialize the conv scheme
-        self.scale_factor = scale_factor
-        self.gated_conv2d = GatedConv2d(
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride,
-            padding,
-            dilation,
-            pad_type,
-            activation,
-            norm,
-            single_channel_conv,
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = F.interpolate(x, scale_factor=self.scale_factor, mode="nearest")
-        return self.gated_conv2d(x)
 
 
 def l2normalize(v, eps=1e-12):

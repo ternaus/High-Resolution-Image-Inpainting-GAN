@@ -4,10 +4,9 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from high_resolution_image_inpainting_gan.network_module import (
+from high_resolution_image_inpainting_gan.network_module import (  # TransposeGatedConv2d,
     Conv2dLayer,
     GatedConv2d,
-    TransposeGatedConv2d,
 )
 
 
@@ -62,10 +61,12 @@ class Coarse(nn.Module):
         )
         # decoder
         self.coarse9 = nn.Sequential(
-            TransposeGatedConv2d(64, 64, 3, 1, 1, 1, "zero", activation, norm, single_channel_conv=True),
-            TransposeGatedConv2d(64, 32, 3, 1, 1, 1, "zero", activation, norm, single_channel_conv=True),
+            nn.Upsample(scale_factor=2),
+            GatedConv2d(64, 64, 3, 1, 1, 1, "zero", activation, norm, single_channel_conv=True),
+            nn.Upsample(scale_factor=2),
+            GatedConv2d(64, 32, 3, 1, 1, 1, "zero", activation, norm, single_channel_conv=True),
             GatedConv2d(32, 3, 3, 1, 1, 1, "replicate", "none", norm, single_channel_conv=True),
-            nn.Tanh(),
+            nn.Sigmoid(),
         )
 
     def forward(self, first_in: torch.Tensor) -> torch.Tensor:
@@ -78,7 +79,8 @@ class Coarse(nn.Module):
         first_out = self.coarse7(first_out) + first_out
         first_out = self.coarse8(first_out) + first_out
         first_out = self.coarse9(first_out)
-        return torch.clamp(first_out, 0, 1)
+        # return torch.clamp(first_out, 0, 1)
+        return first_out
 
 
 class GatedGenerator(nn.Module):
@@ -112,17 +114,20 @@ class GatedGenerator(nn.Module):
         )
         self.refinement7 = nn.Sequential(
             GatedConv2d(256, 128, 3, 1, 1, 1, "replicate", activation, norm),
-            TransposeGatedConv2d(128, 64, 3, 1, 1, 1, "zero", activation, norm),
+            nn.Upsample(scale_factor=2),
+            GatedConv2d(128, 64, 3, 1, 1, 1, "zero", activation, norm),
             GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm),
         )
         self.refinement8 = nn.Sequential(
-            TransposeGatedConv2d(128, 64, 3, 1, 1, 1, "zero", activation, norm),
+            nn.Upsample(scale_factor=2),
+            GatedConv2d(128, 64, 3, 1, 1, 1, "zero", activation, norm),
             GatedConv2d(64, 32, 3, 1, 1, 1, "replicate", activation, norm),
         )
         self.refinement9 = nn.Sequential(
-            TransposeGatedConv2d(64, 32, 3, 1, 1, 1, "zero", activation, norm),
+            nn.Upsample(scale_factor=2),
+            GatedConv2d(64, 32, 3, 1, 1, 1, "zero", activation, norm),
             GatedConv2d(32, 3, 3, 1, 1, 1, "replicate", "none", norm),
-            nn.Tanh(),
+            nn.Sigmoid(),
         )
         self.conv_pl3 = nn.Sequential(GatedConv2d(128, 128, 3, 1, 1, 1, "replicate", activation, norm))
         self.conv_pl2 = nn.Sequential(
@@ -170,7 +175,7 @@ class GatedGenerator(nn.Module):
 
         # out: [B, 3, H, W]
         second_out = self.refinement9(second_out)
-        second_out = torch.clamp(second_out, 0, 1)
+        # second_out = torch.clamp(second_out, 0, 1)
         return first_out, second_out
 
     @staticmethod

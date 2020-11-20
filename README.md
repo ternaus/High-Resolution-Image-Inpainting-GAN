@@ -2,7 +2,7 @@
 
 Refactored implementation of [https://github.com/wangyx240/High-Resolution-Image-Inpainting-GAN](https://github.com/wangyx240/High-Resolution-Image-Inpainting-GAN)
 
-which is an unofficial Pytorch Re-implementation of [https://arxiv.org/abs/2005.09704](Contextual Residual Aggregation for Ultra High-Resolution Image Inpainting)" (CVPR 2020 Oral).
+which is an unofficial Pytorch Re-implementation of [Contextual Residual Aggregation for Ultra High-Resolution Image Inpainting](https://openaccess.thecvf.com/content_CVPR_2020/html/Yi_Contextual_Residual_Aggregation_for_Ultra_High-Resolution_Image_Inpainting_CVPR_2020_paper.html)" (CVPR 2020 Oral).
 
 ## Implementation
 Besides Contextual Residual Aggregation(CRA) and Light-Weight GatedConvolution in the paper, also add Residual network structure, SN-PatchGAN in this project.
