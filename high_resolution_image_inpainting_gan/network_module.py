@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from torch.nn import functional as F
 
 activation_dict = {
     "relu": nn.ReLU(inplace=True),
@@ -54,42 +53,6 @@ class Conv2dLayer(nn.Module):
         if self.activation:
             x = self.activation(x)
         return x
-
-
-class TransposeConv2dLayer(nn.Module):
-    def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: int,
-        stride: int = 1,
-        padding: int = 0,
-        dilation: int = 1,
-        pad_type: str = "zero",
-        activation: str = "lrelu",
-        norm: str = "none",
-        spectral_norm: bool = False,
-        scale_factor: int = 2,
-    ):
-        super().__init__()
-        # Initialize the conv scheme
-        self.scale_factor = scale_factor
-        self.conv2d = Conv2dLayer(
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride,
-            padding,
-            dilation,
-            pad_type,
-            activation,
-            norm,
-            spectral_norm,
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = F.interpolate(x, scale_factor=self.scale_factor, mode="nearest")
-        return self.conv2d(x)
 
 
 class DepthWiseSeparableConv(nn.Module):

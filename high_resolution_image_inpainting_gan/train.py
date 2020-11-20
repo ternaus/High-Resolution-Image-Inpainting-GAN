@@ -14,6 +14,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 from high_resolution_image_inpainting_gan.dataset import InpaintDataset
+from high_resolution_image_inpainting_gan.losses import Hinge, Perceptual
 
 image_path = Path(os.environ["IMAGE_PATH"])
 
@@ -30,8 +31,10 @@ class Inpainting(pl.LightningModule):
         super().__init__()
         self.config = config
         self.generator = object_from_dict(self.config["generator"])
+        self.discriminator = object_from_dict(self.config["discriminator"])
 
-        self.losses = {"l1": nn.L1Loss()}
+        self.perceptual = Perceptual()
+        self.losses = {"l1": nn.L1Loss(), "hinge": Hinge()}
 
     def forward(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:  # type: ignore
         return self.generator(**batch)
@@ -61,41 +64,65 @@ class Inpainting(pl.LightningModule):
         return result
 
     def configure_optimizers(self):
-        optimizer = object_from_dict(
+        optimizer_generator = object_from_dict(
             self.config["optimizer_generator"],
             params=[x for x in self.generator.parameters() if x.requires_grad],
         )
 
-        scheduler = object_from_dict(self.config["scheduler"], optimizer=optimizer)
-        self.optimizers = [optimizer]
+        optimizer_discriminator = object_from_dict(
+            self.config["optimizer_discriminator"],
+            params=[x for x in self.discriminator.parameters() if x.requires_grad],
+        )
 
-        return self.optimizers, [scheduler]
+        scheduler_generator = object_from_dict(self.config["scheduler_generator"], optimizer=optimizer_generator)
+        scheduler_discriminator = object_from_dict(
+            self.config["scheduler_discriminator"], optimizer=optimizer_discriminator
+        )
 
-    def training_step(self, batch, batch_idx):  # pylint: disable=W0613
+        self.optimizers = [optimizer_generator, optimizer_discriminator]
+
+        return self.optimizers, [scheduler_generator, scheduler_discriminator]
+
+    def training_step(self, batch, batch_idx, optimizer_idx):  # pylint: disable=W0613, R1710
         images = batch["image"]
         masks = batch["mask"]
 
-        # Generator output
-        first_out, second_out = self.generator(images, masks)
+        if optimizer_idx == 0:  # train generator
+            # Generator output
+            first_out, second_out = self.generator(images, masks)
 
-        # forward propagation
-        first_out_whole_image = images * (1 - masks) + first_out * masks  # in range [0, 1]
-        second_out_whole_image = images * (1 - masks) + second_out * masks  # in range [0, 1]
+            first_out_whole_image = images * (1 - masks) + first_out * masks  # in range [0, 1]
+            self.second_out_whole_image = images * (1 - masks) + second_out * masks  # in range [0, 1]
 
-        # Mask L1 Loss
-        first_mask_l1_loss = self.losses["l1"](first_out_whole_image, images)
-        second_mask_l1_loss = self.losses["l1"](second_out_whole_image, images)
+            first_mask_l1_loss = self.losses["l1"](first_out_whole_image, images)
+            second_mask_l1_loss = self.losses["l1"](self.second_out_whole_image, images)
+            perceptual_loss = self.perceptual(self.second_out_whole_image, images)
 
-        total_loss = (
-            self.config.loss_weights["mask_l1"] * first_mask_l1_loss
-            + self.config.loss_weights["mask_l2"] * second_mask_l1_loss
-        )
+            fake_scalar = self.discriminator(self.second_out_whole_image, masks)
+            gan_loss = -torch.mean(fake_scalar)
 
-        self.log("first_mask_l1", first_mask_l1_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
-        self.log("second_mask_l1", second_mask_l1_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
-        self.log("total_loss", total_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
+            total_loss = (
+                self.config.loss_weights["mask_l1"] * first_mask_l1_loss
+                + self.config.loss_weights["mask_l2"] * second_mask_l1_loss
+                + self.config.loss_weights["perceptual"] * perceptual_loss
+                + self.config.loss_weights["gan"] * gan_loss
+            )
 
-        return total_loss
+            self.log("first_mask_l1", first_mask_l1_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
+            self.log("second_mask_l1", second_mask_l1_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
+            self.log("gan", gan_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
+            self.log("perceptual", perceptual_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
+            self.log("total_loss", total_loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
+
+            return total_loss
+
+        if optimizer_idx == 1:  # train discriminator
+            fake_scalar = self.discriminator(self.second_out_whole_image.detach(), masks)
+            true_scalar = self.discriminator(images, masks)
+            loss_discriminator = self.losses["hinge"](true_scalar, fake_scalar)
+            self.log("discriminator", loss_discriminator, on_step=True, on_epoch=False, logger=True, prog_bar=True)
+
+            return loss_discriminator
 
     def _get_current_lr(self) -> torch.Tensor:
         lr = [x["lr"] for x in self.optimizers[0].param_groups][0]  # type: ignore

@@ -21,7 +21,7 @@ export TRAIN_PATH=<path to train images>
 python train.py -c <path_to_config>
 ```
 
-For input size of 512x512 and GPU with memory of 11GB, recommended batchsize is 4.
+For input size of 512x512 and GPU with memory of 11GB, recommended batchsize is 8.
 
 ### Acknowledgement & Reference
 

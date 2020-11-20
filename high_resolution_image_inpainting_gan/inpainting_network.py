@@ -3,6 +3,7 @@ from typing import Tuple
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torchvision import models
 
 from high_resolution_image_inpainting_gan.network_module import Conv2dLayer, GatedConv2d
 
@@ -124,7 +125,8 @@ class GatedGenerator(nn.Module):
             GatedConv2d(32, 3, 3, 1, 1, 1, "replicate", "none", norm),
             nn.Sigmoid(),
         )
-        self.conv_pl3 = nn.Sequential(GatedConv2d(128, 128, 3, 1, 1, 1, "replicate", activation, norm))
+        self.conv_pl3 = GatedConv2d(128, 128, 3, 1, 1, 1, "replicate", activation, norm)
+
         self.conv_pl2 = nn.Sequential(
             GatedConv2d(64, 64, 3, 1, 1, 1, "replicate", activation, norm),
             GatedConv2d(64, 64, 3, 1, 2, 2, "replicate", activation, norm),
@@ -220,12 +222,12 @@ class PatchDiscriminator(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.block1 = Conv2dLayer(4, 64, 3, 2, 1, 1, "repicate", "lrelu", "in", spectral_norm=True)
-        self.block2 = Conv2dLayer(64, 128, 3, 2, 1, 1, "repicate", "lrelu", "in", spectral_norm=True)
-        self.block3 = Conv2dLayer(128, 256, 3, 2, 1, "repicate", "lrelu", "in", spectral_norm=True)
-        self.block4 = Conv2dLayer(256, 256, 3, 2, 1, 1, "repicate", "lrelu", "in", spectral_norm=True)
-        self.block5 = Conv2dLayer(256, 256, 3, 2, 1, 1, "repicate", "lrelu", "in", spectral_norm=True)
-        self.block6 = Conv2dLayer(256, 16, 3, 2, 1, 1, "repicate", "lrelu", "in", spectral_norm=True)
+        self.block1 = Conv2dLayer(4, 64, 3, 2, 1, 1, "replicate", "lrelu", "in", spectral_norm=True)
+        self.block2 = Conv2dLayer(64, 128, 3, 2, 1, 1, "replicate", "lrelu", "in", spectral_norm=True)
+        self.block3 = Conv2dLayer(128, 256, 3, 2, 1, 1, "replicate", "lrelu", "in", spectral_norm=True)
+        self.block4 = Conv2dLayer(256, 256, 3, 2, 1, 1, "replicate", "lrelu", "in", spectral_norm=True)
+        self.block5 = Conv2dLayer(256, 256, 3, 2, 1, 1, "replicate", "lrelu", "in", spectral_norm=True)
+        self.block6 = Conv2dLayer(256, 16, 3, 2, 1, 1, "replicate", "lrelu", "in", spectral_norm=True)
         self.block7 = torch.nn.Linear(1024, 1)
 
     def forward(self, image: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
@@ -239,3 +241,24 @@ class PatchDiscriminator(nn.Module):
         x = self.block6(x)  # out: [B, 256, 8, 8]
         x = x.reshape([x.shape[0], -1])
         return self.block7(x)
+
+
+class VGG16FeatureExtractor(nn.Module):
+    def __init__(self):
+        super().__init__()
+        vgg16 = models.vgg16(pretrained=True)
+        self.enc_1 = nn.Sequential(*vgg16.features[:5])
+        self.enc_2 = nn.Sequential(*vgg16.features[5:10])
+        self.enc_3 = nn.Sequential(*vgg16.features[10:17])
+
+        # fix the encoder
+        for i in range(3):
+            for param in getattr(self, "enc_{:d}".format(i + 1)).parameters():
+                param.requires_grad = False
+
+    def forward(self, image):
+        results = [image]
+        for i in range(3):
+            func = getattr(self, "enc_{:d}".format(i + 1))
+            results.append(func(results[-1]))
+        return results[1:]
