@@ -61,9 +61,12 @@ class Inpainting(pl.LightningModule):
         return result
 
     def configure_optimizers(self):
+        fine_generator_parameters = [x for x in self.generator.parameters() if x.requires_grad]
+        coarse_generator_parameters = [x for x in self.generator.coarse.parameters() if x.requires_grad]
+
         optimizer = object_from_dict(
             self.config["optimizer"],
-            params=[x for x in self.model.parameters() if x.requires_grad],
+            params=fine_generator_parameters + coarse_generator_parameters,
         )
 
         scheduler = object_from_dict(self.config["scheduler"], optimizer=optimizer)
@@ -74,8 +77,6 @@ class Inpainting(pl.LightningModule):
     def training_step(self, batch, batch_idx):  # pylint: disable=W0613
         images = batch["image"]
         masks = batch["mask"]
-
-        first_out, second_out = self.forward(**batch)
 
         # Generator output
         first_out, second_out = self.generator(images, masks)

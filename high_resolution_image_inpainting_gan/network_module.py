@@ -31,7 +31,7 @@ class Conv2dLayer(nn.Module):
         pad_type="replicate",
         activation="none",
         norm="none",
-        sn=False,
+        spectral_norm=False,
     ):
         super().__init__()
 
@@ -40,7 +40,7 @@ class Conv2dLayer(nn.Module):
         self.activation = activation_dict[activation]
 
         # Initialize the convolution layers
-        if sn:
+        if spectral_norm:
             self.conv2d = SpectralNorm(
                 nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=0, dilation=dilation)
             )
@@ -60,23 +60,32 @@ class Conv2dLayer(nn.Module):
 class TransposeConv2dLayer(nn.Module):
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride=1,
-        padding=0,
-        dilation=1,
-        pad_type="zero",
-        activation="lrelu",
-        norm="none",
-        sn=False,
-        scale_factor=2,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: int = 1,
+        padding: int = 0,
+        dilation: int = 1,
+        pad_type: str = "zero",
+        activation: str = "lrelu",
+        norm: str = "none",
+        spectral_norm: bool = False,
+        scale_factor: int = 2,
     ):
         super().__init__()
         # Initialize the conv scheme
         self.scale_factor = scale_factor
         self.conv2d = Conv2dLayer(
-            in_channels, out_channels, kernel_size, stride, padding, dilation, pad_type, activation, norm, sn
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            pad_type,
+            activation,
+            norm,
+            spectral_norm,
         )
 
     def forward(self, x):

@@ -15,7 +15,7 @@ class InpaintDataset(Dataset):
         self.transform = transform
 
         if length is None:
-            self.length = len(self.samples)
+            self.length = len(self.image_paths)
         else:
             self.length = length
 

@@ -17,80 +17,55 @@ class Coarse(nn.Module):
     Output: filled image
     """
 
-    def __init__(self, config):
+    # def __init__(self, config):
+    def __init__(self, norm, activation):
         super().__init__()
         # Initialize the padding scheme
         self.coarse1 = nn.Sequential(
             # encoder
-            GatedConv2d(4, 32, 5, 2, 2, activation=config.activation, norm=config.norm, single_channel_conv=True),
-            GatedConv2d(32, 32, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
-            GatedConv2d(32, 64, 3, 2, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
+            GatedConv2d(4, 32, 5, 2, 2, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(32, 32, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(32, 64, 3, 2, 1, activation=activation, norm=norm, single_channel_conv=True),
         )
         self.coarse2 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
         )
         self.coarse3 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
         )
         self.coarse4 = nn.Sequential(
-            GatedConv2d(
-                64, 64, 3, 1, 2, dilation=2, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
-            GatedConv2d(
-                64, 64, 3, 1, 2, dilation=2, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
-            GatedConv2d(
-                64, 64, 3, 1, 2, dilation=2, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
+            GatedConv2d(64, 64, 3, 1, 2, dilation=2, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 2, dilation=2, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 2, dilation=2, activation=activation, norm=norm, single_channel_conv=True),
         )
         self.coarse5 = nn.Sequential(
-            GatedConv2d(
-                64, 64, 3, 1, 4, dilation=4, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
-            GatedConv2d(
-                64, 64, 3, 1, 4, dilation=4, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
-            GatedConv2d(
-                64, 64, 3, 1, 4, dilation=4, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
+            GatedConv2d(64, 64, 3, 1, 4, dilation=4, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 4, dilation=4, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 4, dilation=4, activation=activation, norm=norm, single_channel_conv=True),
         )
         self.coarse6 = nn.Sequential(
-            GatedConv2d(
-                64, 64, 3, 1, 8, dilation=8, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
-            GatedConv2d(
-                64, 64, 3, 1, 8, dilation=8, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
-            GatedConv2d(
-                64, 64, 3, 1, 8, dilation=8, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
+            GatedConv2d(64, 64, 3, 1, 8, dilation=8, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 8, dilation=8, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 8, dilation=8, activation=activation, norm=norm, single_channel_conv=True),
         )
         self.coarse7 = nn.Sequential(
-            GatedConv2d(
-                64, 64, 3, 1, 16, dilation=16, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
-            GatedConv2d(
-                64, 64, 3, 1, 16, dilation=16, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
+            GatedConv2d(64, 64, 3, 1, 16, dilation=16, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 16, dilation=16, activation=activation, norm=norm, single_channel_conv=True),
         )
         self.coarse8 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
         )
         # decoder
         self.coarse9 = nn.Sequential(
-            TransposeGatedConv2d(
-                64, 64, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
-            TransposeGatedConv2d(
-                64, 32, 3, 1, 1, activation=config.activation, norm=config.norm, single_channel_conv=True
-            ),
-            GatedConv2d(32, 3, 3, 1, 1, activation="none", norm=config.norm, single_channel_conv=True),
+            TransposeGatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            TransposeGatedConv2d(64, 32, 3, 1, 1, activation=activation, norm=norm, single_channel_conv=True),
+            GatedConv2d(32, 3, 3, 1, 1, activation="none", norm=norm, single_channel_conv=True),
             nn.Tanh(),
         )
 
@@ -108,57 +83,58 @@ class Coarse(nn.Module):
 
 
 class GatedGenerator(nn.Module):
-    def __init__(self, config):
+    # def __init__(self, config):
+    def __init__(self, norm, activation):
         super().__init__()
 
         # ######################################### Coarse Network ##################################################
-        self.coarse = Coarse(config)
+        self.coarse = Coarse(norm, activation)
 
         # ######################################### Refinement Network ##########################################
         self.refinement1 = nn.Sequential(
-            GatedConv2d(3, 32, 5, 2, 2, activation=config.activation, norm=config.norm),  # [B,32,256,256]
-            GatedConv2d(32, 32, 3, 1, 1, activation=config.activation, norm=config.norm),
+            GatedConv2d(3, 32, 5, 2, 2, activation=activation, norm=norm),  # [B,32,256,256]
+            GatedConv2d(32, 32, 3, 1, 1, activation=activation, norm=norm),
         )
         self.refinement2 = nn.Sequential(
             # encoder
-            GatedConv2d(32, 64, 3, 2, 1, activation=config.activation, norm=config.norm),
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm),
+            GatedConv2d(32, 64, 3, 2, 1, activation=activation, norm=norm),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm),
         )
-        self.refinement3 = nn.Sequential(GatedConv2d(64, 128, 3, 2, 1, activation=config.activation, norm=config.norm))
+        self.refinement3 = nn.Sequential(GatedConv2d(64, 128, 3, 2, 1, activation=activation, norm=norm))
         self.refinement4 = nn.Sequential(
-            GatedConv2d(128, 128, 3, 1, 1, activation=config.activation, norm=config.norm),
-            GatedConv2d(128, 128, 3, 1, 1, activation=config.activation, norm=config.norm),
+            GatedConv2d(128, 128, 3, 1, 1, activation=activation, norm=norm),
+            GatedConv2d(128, 128, 3, 1, 1, activation=activation, norm=norm),
         )
         self.refinement5 = nn.Sequential(
-            GatedConv2d(128, 128, 3, 1, 2, dilation=2, activation=config.activation, norm=config.norm),
-            GatedConv2d(128, 128, 3, 1, 4, dilation=4, activation=config.activation, norm=config.norm),
+            GatedConv2d(128, 128, 3, 1, 2, dilation=2, activation=activation, norm=norm),
+            GatedConv2d(128, 128, 3, 1, 4, dilation=4, activation=activation, norm=norm),
         )
         self.refinement6 = nn.Sequential(
-            GatedConv2d(128, 128, 3, 1, 8, dilation=8, activation=config.activation, norm=config.norm),
-            GatedConv2d(128, 128, 3, 1, 16, dilation=16, activation=config.activation, norm=config.norm),
+            GatedConv2d(128, 128, 3, 1, 8, dilation=8, activation=activation, norm=norm),
+            GatedConv2d(128, 128, 3, 1, 16, dilation=16, activation=activation, norm=norm),
         )
         self.refinement7 = nn.Sequential(
-            GatedConv2d(256, 128, 3, 1, 1, activation=config.activation, norm=config.norm),
-            TransposeGatedConv2d(128, 64, 3, 1, 1, activation=config.activation, norm=config.norm),
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm),
+            GatedConv2d(256, 128, 3, 1, 1, activation=activation, norm=norm),
+            TransposeGatedConv2d(128, 64, 3, 1, 1, activation=activation, norm=norm),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm),
         )
         self.refinement8 = nn.Sequential(
-            TransposeGatedConv2d(128, 64, 3, 1, 1, activation=config.activation, norm=config.norm),
-            GatedConv2d(64, 32, 3, 1, 1, activation=config.activation, norm=config.norm),
+            TransposeGatedConv2d(128, 64, 3, 1, 1, activation=activation, norm=norm),
+            GatedConv2d(64, 32, 3, 1, 1, activation=activation, norm=norm),
         )
         self.refinement9 = nn.Sequential(
-            TransposeGatedConv2d(64, 32, 3, 1, 1, activation=config.activation, norm=config.norm),
-            GatedConv2d(32, 3, 3, 1, 1, activation="none", norm=config.norm),
+            TransposeGatedConv2d(64, 32, 3, 1, 1, activation=activation, norm=norm),
+            GatedConv2d(32, 3, 3, 1, 1, activation="none", norm=norm),
             nn.Tanh(),
         )
-        self.conv_pl3 = nn.Sequential(GatedConv2d(128, 128, 3, 1, 1, activation=config.activation, norm=config.norm))
+        self.conv_pl3 = nn.Sequential(GatedConv2d(128, 128, 3, 1, 1, activation=activation, norm=norm))
         self.conv_pl2 = nn.Sequential(
-            GatedConv2d(64, 64, 3, 1, 1, activation=config.activation, norm=config.norm),
-            GatedConv2d(64, 64, 3, 1, 2, dilation=2, activation=config.activation, norm=config.norm),
+            GatedConv2d(64, 64, 3, 1, 1, activation=activation, norm=norm),
+            GatedConv2d(64, 64, 3, 1, 2, dilation=2, activation=activation, norm=norm),
         )
         self.conv_pl1 = nn.Sequential(
-            GatedConv2d(32, 32, 3, 1, 1, activation=config.activation, norm=config.norm),
-            GatedConv2d(32, 32, 3, 1, 2, dilation=2, activation=config.activation, norm=config.norm),
+            GatedConv2d(32, 32, 3, 1, 1, activation=activation, norm=norm),
+            GatedConv2d(32, 32, 3, 1, 2, dilation=2, activation=activation, norm=norm),
         )
 
     def forward(self, image: torch.Tensor, mask: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -185,14 +161,18 @@ class GatedGenerator(nn.Module):
 
         second_out = torch.cat((pl3, self.conv_pl3(self.attention_transfer(pl3, att))), 1)  # out: [B, 256, 64, 64]
         second_out = self.refinement7(second_out)  # out: [B, 64, 128, 128]
-        second_out = torch.cat(
-            (second_out, self.conv_pl2(self.attention_transfer(pl2, att))), 1
-        )  # out: [B, 128, 128, 128]
-        second_out = self.refinement8(second_out)  # out: [B, 32, 256, 256]
-        second_out = torch.cat(
-            (second_out, self.conv_pl1(self.attention_transfer(pl1, att))), 1
-        )  # out: [B, 64, 256, 256]
-        second_out = self.refinement9(second_out)  # out: [B, 3, H, W]
+
+        # out: [B, 128, 128, 128]
+        second_out = torch.cat((second_out, self.conv_pl2(self.attention_transfer(pl2, att))), 1)
+
+        # out: [B, 32, 256, 256]
+        second_out = self.refinement8(second_out)
+
+        # out: [B, 64, 256, 256]
+        second_out = torch.cat((second_out, self.conv_pl1(self.attention_transfer(pl1, att))), 1)
+
+        # out: [B, 3, H, W]
+        second_out = self.refinement9(second_out)
         second_out = torch.clamp(second_out, 0, 1)
         return first_out, second_out
 
@@ -240,18 +220,14 @@ class PatchDiscriminator(nn.Module):
     Output: patch based region, we set 30 * 30
     """
 
-    def __init__(self, config):
+    def __init__(self):
         super().__init__()
-        # Down sampling
-        self.sn = True
-        self.norm = "in"
-        self.batchsize = config.batch_size
-        self.block1 = Conv2dLayer(4, 64, 3, 2, 1, activation="lrelu", norm=self.norm, sn=self.sn)
-        self.block2 = Conv2dLayer(64, 128, 3, 2, 1, activation="lrelu", norm=self.norm, sn=self.sn)
-        self.block3 = Conv2dLayer(128, 256, 3, 2, 1, activation="lrelu", norm=self.norm, sn=self.sn)
-        self.block4 = Conv2dLayer(256, 256, 3, 2, 1, activation="lrelu", norm=self.norm, sn=self.sn)
-        self.block5 = Conv2dLayer(256, 256, 3, 2, 1, activation="lrelu", norm=self.norm, sn=self.sn)
-        self.block6 = Conv2dLayer(256, 16, 3, 2, 1, activation="lrelu", norm=self.norm, sn=self.sn)
+        self.block1 = Conv2dLayer(4, 64, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
+        self.block2 = Conv2dLayer(64, 128, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
+        self.block3 = Conv2dLayer(128, 256, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
+        self.block4 = Conv2dLayer(256, 256, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
+        self.block5 = Conv2dLayer(256, 256, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
+        self.block6 = Conv2dLayer(256, 16, 3, 2, 1, activation="lrelu", norm="in", spectral_norm=True)
         self.block7 = torch.nn.Linear(1024, 1)
 
     def forward(self, image: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
@@ -265,103 +241,3 @@ class PatchDiscriminator(nn.Module):
         x = self.block6(x)  # out: [B, 256, 8, 8]
         x = x.reshape([x.shape[0], -1])
         return self.block7(x)
-
-
-#
-#
-# # ----------------------------------------
-# #            Perceptual Network
-# # ----------------------------------------
-# # VGG-16 conv4_3 features
-# class PerceptualNet(nn.Module):
-#     def __init__(self):
-#         super().__init__()
-#         self.features = nn.Sequential(
-#             nn.Conv2d(3, 64, 3, 1, 1),
-#             nn.ReLU(inplace=True),
-#             nn.Conv2d(64, 64, 3, 1, 1),
-#             nn.ReLU(inplace=True),
-#             nn.MaxPool2d(2, 2),
-#             nn.Conv2d(64, 128, 3, 1, 1),
-#             nn.ReLU(inplace=True),
-#             nn.Conv2d(128, 128, 3, 1, 1),
-#             nn.ReLU(inplace=True),
-#             nn.MaxPool2d(2, 2),
-#             nn.Conv2d(128, 256, 3, 1, 1),
-#             nn.ReLU(inplace=True),
-#             nn.Conv2d(256, 256, 3, 1, 1),
-#             nn.ReLU(inplace=True),
-#             nn.Conv2d(256, 256, 3, 1, 1),
-#             nn.MaxPool2d(2, 2),
-#             nn.Conv2d(256, 512, 3, 1, 1),
-#             nn.ReLU(inplace=True),
-#             nn.Conv2d(512, 512, 3, 1, 1),
-#             nn.ReLU(inplace=True),
-#             nn.Conv2d(512, 512, 3, 1, 1),
-#         )
-#
-#     def forward(self, x: torch.Tensor) -> torch.Tensor:
-#         return self.features(x)
-#
-#
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--save_path", type=str, default="./models", help="saving path that is a folder")
-#     parser.add_argument("--sample_path", type=str, default="./samples", help="training
-#     samples path that is a folder")
-#     parser.add_argument("--gan_type", type=str, default="WGAN", help="the type of GAN for training")
-#     parser.add_argument("--multi_gpu", type=bool, default=False, help="nn.Parallel needs or not")
-#     parser.add_argument("--gpu_ids", type=str, default="0", help="gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU")
-#     parser.add_argument("--cudnn_benchmark", type=bool, default=True, help="True for unchanged input data type")
-#     parser.add_argument("--checkpoint_interval", type=int, default=1, help="interval between model checkpoints")
-#     parser.add_argument("--load_name", type=str, default="", help="load model name")
-#     # Training parameters
-#     parser.add_argument("--epochs", type=int, default=40, help="number of epochs of training")
-#     parser.add_argument("--batch_size", type=int, default=6, help="size of the batches")
-#     parser.add_argument("--lr_g", type=float, default=1e-4, help="Adam: learning rate")
-#     parser.add_argument("--lr_d", type=float, default=4e-4, help="Adam: learning rate")
-#     parser.add_argument("--b1", type=float, default=0.5, help="Adam: beta 1")
-#     parser.add_argument("--b2", type=float, default=0.999, help="Adam: beta 2")
-#     parser.add_argument("--weight_decay", type=float, default=0, help="Adam: weight decay")
-#     parser.add_argument(
-#         "--lr_decrease_epoch", type=int, default=10, help="lr decrease at certain epoch and its multiple"
-#     )
-#     parser.add_argument(
-#         "--lr_decrease_factor", type=float, default=0.5, help="lr decrease factor, for classification default 0.1"
-#     )
-#     parser.add_argument("--lambda_l1", type=float, default=100, help="the parameter of L1Loss")
-#     parser.add_argument(
-#         "--lambda_perceptual", type=float, default=10, help="the parameter of FML1Loss (perceptual loss)"
-#     )
-#     parser.add_argument(
-#         "--lambda_gan", type=float, default=1, help="the parameter of valid loss of AdaReconL1Loss; 0 is recommended"
-#     )
-#     parser.add_argument(
-#         "--num_workers", type=int, default=16, help="number of cpu threads to use during batch generation"
-#     )
-#     # Network parameters
-#     parser.add_argument("--in_channels", type=int, default=4, help="input RGB image + 1 channel mask")
-#     parser.add_argument("--out_channels", type=int, default=3, help="output RGB image")
-#     parser.add_argument("--latent_channels", type=int, default=32, help="latent channels")
-#     parser.add_argument("--pad_type", type=str, default="replicate", help="the padding type")
-#     parser.add_argument("--activation", type=str, default="elu", help="the activation type")
-#     parser.add_argument("--norm", type=str, default="none", help="normalization type")
-#     parser.add_argument("--init_type", type=str, default="xavier", help="the initialization type")
-#     parser.add_argument("--init_gain", type=float, default=0.02, help="the initialization gain")
-#     # Dataset parameters
-#     parser.add_argument("--baseroot", type=str, default="./dataset/val_256", help="the training folder")
-#     parser.add_argument("--mask_type", type=str, default="free_form", help="mask type")
-#     parser.add_argument("--imgsize", type=int, default=256, help="size of image")
-#     parser.add_argument("--margin", type=int, default=10, help="margin of image")
-#     parser.add_argument("--mask_num", type=int, default=15, help="number of mask")
-#     parser.add_argument("--bbox_shape", type=int, default=30, help="margin of image for bbox mask")
-#     parser.add_argument("--max_angle", type=int, default=4, help="parameter of angle for free form mask")
-#     parser.add_argument("--max_len", type=int, default=50, help="parameter of length for free form mask")
-#     parser.add_argument("--max_width", type=int, default=30, help="parameter of width for free form mask")
-#     opt = parser.parse_args()
-#     print(opt)
-#
-#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # PyTorch v0.4.0
-#     model = GatedGenerator(opt).to(device)
-#
-#     summary(model, [(3, 512, 512), (1, 512, 512)])
