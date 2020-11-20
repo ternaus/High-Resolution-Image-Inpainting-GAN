@@ -3,10 +3,22 @@ from torch import nn
 from torch.nn import Parameter
 from torch.nn import functional as F
 
+activation_dict = {
+    "relu": nn.ReLU(inplace=True),
+    "elu": nn.ELU(alpha=1.0, inplace=True),
+    "lrelu": nn.LeakyReLU(0.2, inplace=True),
+    "prelu": nn.PReLU(),
+    "selu": nn.SELU(inplace=True),
+    "tanh": nn.Tanh(),
+    "sigmoid": nn.Sigmoid(),
+    "none": None,
+}
 
-# -----------------------------------------------
-#                Normal ConvBlock
-# -----------------------------------------------
+bn_dict = {"bn": nn.BatchNorm2d, "in": nn.InstanceNorm2d, "none": lambda x: None}
+
+replicate_dict = {"reflect": nn.ReflectionPad2d, "replicate": nn.ReplicationPad2d, "zero": nn.ZeroPad2d}
+
+
 class Conv2dLayer(nn.Module):
     def __init__(
         self,
@@ -19,51 +31,16 @@ class Conv2dLayer(nn.Module):
         pad_type="replicate",
         activation="none",
         norm="none",
-        sn=False,
+        spectral_norm=False,
     ):
         super().__init__()
-        # Initialize the padding scheme
-        if pad_type == "reflect":
-            self.pad = nn.ReflectionPad2d(padding)
-        elif pad_type == "replicate":
-            self.pad = nn.ReplicationPad2d(padding)
-        elif pad_type == "zero":
-            self.pad = nn.ZeroPad2d(padding)
-        else:
-            assert 0, f"Unsupported padding type: {pad_type}"
 
-        # Initialize the normalization type
-        if norm == "bn":
-            self.norm = nn.BatchNorm2d(out_channels)
-        elif norm == "in":
-            self.norm = nn.InstanceNorm2d(out_channels)
-        elif norm == "none":
-            self.norm = None
-        else:
-            assert 0, f"Unsupported normalization: {norm}"
-
-        # Initialize the activation funtion
-        if activation == "relu":
-            self.activation = nn.ReLU(inplace=True)
-        elif activation == "elu":
-            self.activation = nn.ELU(alpha=1.0, inplace=True)
-        elif activation == "lrelu":
-            self.activation = nn.LeakyReLU(0.2, inplace=True)
-        elif activation == "prelu":
-            self.activation = nn.PReLU()
-        elif activation == "selu":
-            self.activation = nn.SELU(inplace=True)
-        elif activation == "tanh":
-            self.activation = nn.Tanh()
-        elif activation == "sigmoid":
-            self.activation = nn.Sigmoid()
-        elif activation == "none":
-            self.activation = None
-        else:
-            assert 0, f"Unsupported activation: {activation}"
+        self.pad = replicate_dict[pad_type](padding)
+        self.norm = bn_dict[norm](out_channels)
+        self.activation = activation_dict[activation]
 
         # Initialize the convolution layers
-        if sn:
+        if spectral_norm:
             self.conv2d = SpectralNorm(
                 nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=0, dilation=dilation)
             )
@@ -83,29 +60,37 @@ class Conv2dLayer(nn.Module):
 class TransposeConv2dLayer(nn.Module):
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride=1,
-        padding=0,
-        dilation=1,
-        pad_type="zero",
-        activation="lrelu",
-        norm="none",
-        sn=False,
-        scale_factor=2,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: int = 1,
+        padding: int = 0,
+        dilation: int = 1,
+        pad_type: str = "zero",
+        activation: str = "lrelu",
+        norm: str = "none",
+        spectral_norm: bool = False,
+        scale_factor: int = 2,
     ):
         super().__init__()
         # Initialize the conv scheme
         self.scale_factor = scale_factor
         self.conv2d = Conv2dLayer(
-            in_channels, out_channels, kernel_size, stride, padding, dilation, pad_type, activation, norm, sn
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            pad_type,
+            activation,
+            norm,
+            spectral_norm,
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.interpolate(x, scale_factor=self.scale_factor, mode="nearest")
-        x = self.conv2d(x)
-        return x
+        return self.conv2d(x)
 
 
 class depth_separable_conv(nn.Module):
@@ -126,12 +111,15 @@ class depth_separable_conv(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         out = self.depth_conv(x)
-        out = self.point_conv(out)
-        return out
+        return self.point_conv(out)
 
 
-class sc_conv(nn.Module):
-    def __init__(self, in_ch, kernel_size, stride, padding, dilation):
+class SingleChannelConv(nn.Module):
+    """
+    Normal conv but with output to the 1 channel.
+    """
+
+    def __init__(self, in_ch: int, kernel_size: int, stride: int, padding: int, dilation: int) -> None:
         super().__init__()
         self.single_channel_conv = nn.Conv2d(
             in_channels=in_ch,
@@ -147,84 +135,37 @@ class sc_conv(nn.Module):
         return self.single_channel_conv(x)
 
 
-# -----------------------------------------------
-#                Gated ConvBlock
-# -----------------------------------------------
 class GatedConv2d(nn.Module):
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride=1,
-        padding=0,
-        dilation=1,
-        pad_type="replicate",
-        activation="elu",
-        norm="none",
-        sc=False,
-    ):
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: int = 1,
+        padding: int = 0,
+        dilation: int = 1,
+        pad_type: str = "replicate",
+        activation: str = "elu",
+        norm: str = "none",
+        single_channel_conv: bool = False,
+    ) -> None:
         super().__init__()
-        # Initialize the padding scheme
-        if pad_type == "reflect":
-            self.pad = nn.ReflectionPad2d(padding)
-        elif pad_type == "replicate":
-            self.pad = nn.ReplicationPad2d(padding)
-        elif pad_type == "zero":
-            self.pad = nn.ZeroPad2d(padding)
-        else:
-            assert 0, f"Unsupported padding type: {pad_type}"
 
-        # Initialize the normalization type
-        if norm == "bn":
-            self.norm = nn.BatchNorm2d(out_channels)
-        elif norm == "in":
-            self.norm = nn.InstanceNorm2d(out_channels)
-        elif norm == "none":
-            self.norm = None
-        else:
-            assert 0, f"Unsupported normalization: {norm}"
-
-        # Initialize the activation funtion
-        if activation == "relu":
-            self.activation = nn.ReLU(inplace=True)
-        elif activation == "elu":
-            self.activation = nn.ELU(alpha=1.0, inplace=True)
-        elif activation == "lrelu":
-            self.activation = nn.LeakyReLU(0.2, inplace=True)
-        elif activation == "prelu":
-            self.activation = nn.PReLU()
-        elif activation == "selu":
-            self.activation = nn.SELU(inplace=True)
-        elif activation == "tanh":
-            self.activation = nn.Tanh()
-        elif activation == "sigmoid":
-            self.activation = nn.Sigmoid()
-        elif activation == "none":
-            self.activation = None
-        else:
-            assert 0, f"Unsupported activation: {activation}"
+        self.pad = replicate_dict[pad_type](padding)
+        self.norm = bn_dict[norm](out_channels)
+        self.activation = activation_dict[activation]
 
         # Initialize the convolution layers
-        if sc:
+        if single_channel_conv:
             self.conv2d = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=0, dilation=dilation)
-            self.mask_conv2d = sc_conv(in_channels, kernel_size, stride, padding=0, dilation=dilation)
+            self.mask_conv2d = SingleChannelConv(in_channels, kernel_size, stride, padding=0, dilation=dilation)
         else:
             self.conv2d = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=0, dilation=dilation)
-            # self.mask_conv2d = nn.Conv2d(in_channels, out_channels, kernel_size, stride,
-            # padding=0, dilation=dilation)
             self.mask_conv2d = depth_separable_conv(
                 in_channels, out_channels, kernel_size, stride, padding=0, dilation=dilation
             )
 
         self.sigmoid = torch.nn.Sigmoid()
-        # self.shortcut = nn.Sequential()
-        # if stride != 1 or in_channels != out_channels:
-        #     self.shortcut = nn.Sequential(
-        #         nn.Conv2d(in_channels, out_channels,
-        #                   kernel_size=1, stride=stride, bias=False),
-        #         self.norm
-        #     )
 
     def forward(self, x_in):
         x = self.pad(x_in)
@@ -235,75 +176,45 @@ class GatedConv2d(nn.Module):
         if self.activation:
             conv = self.activation(conv)
         gated_mask = self.sigmoid(mask)
-        x = conv * gated_mask
-
-        # x += self.shortcut(x_in)
-
-        return x
+        return conv * gated_mask
 
 
 class TransposeGatedConv2d(nn.Module):
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride=1,
-        padding=0,
-        dilation=1,
-        pad_type="zero",
-        activation="lrelu",
-        norm="none",
-        sc=False,
-        scale_factor=2,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: int = 1,
+        padding: int = 0,
+        dilation: int = 1,
+        pad_type: str = "zero",
+        activation: str = "lrelu",
+        norm: str = "none",
+        single_channel_conv: bool = False,
+        scale_factor: int = 2,
     ):
         super().__init__()
         # Initialize the conv scheme
         self.scale_factor = scale_factor
         self.gated_conv2d = GatedConv2d(
-            in_channels, out_channels, kernel_size, stride, padding, dilation, pad_type, activation, norm, sc
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            pad_type,
+            activation,
+            norm,
+            single_channel_conv,
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.interpolate(x, scale_factor=self.scale_factor, mode="nearest")
-        x = self.gated_conv2d(x)
-        return x
+        return self.gated_conv2d(x)
 
 
-# ----------------------------------------
-#               Layer Norm
-# ----------------------------------------
-# class LayerNorm(nn.Module):
-#     def __init__(self, num_features, eps = 1e-8, affine = True):
-#         super(LayerNorm, self).__init__()
-#         self.num_features = num_features
-#         self.affine = affine
-#         self.eps = eps
-#
-#         if self.affine:
-#             self.gamma = Parameter(torch.Tensor(num_features).uniform_())
-#             self.beta = Parameter(torch.zeros(num_features))
-#
-#     def forward(self, x):
-#         # layer norm
-#         shape = [-1] + [1] * (x.dim() - 1)                                  # for 4d input: [-1, 1, 1, 1]
-#         if x.size(0) == 1:
-#             # These two lines run much faster in pytorch 0.4 than the two lines listed below.
-#             mean = x.view(-1).mean().view(*shape)
-#             std = x.view(-1).std().view(*shape)
-#         else:
-#             mean = x.view(x.size(0), -1).mean(1).view(*shape)
-#             std = x.view(x.size(0), -1).std(1).view(*shape)
-#         x = (x - mean) / (std + self.eps)
-#         # if it is learnable
-#         if self.affine:
-#             shape = [1, -1] + [1] * (x.dim() - 2)                          # for 4d input: [1, -1, 1, 1]
-#             x = x * self.gamma.view(*shape) + self.beta.view(*shape)
-#         return x
-#
-# -----------------------------------------------
-#                  SpectralNorm
-# -----------------------------------------------
 def l2normalize(v, eps=1e-12):
     return v / (v.norm() + eps)
 

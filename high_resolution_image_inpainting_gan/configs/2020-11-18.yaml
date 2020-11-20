@@ -1,0 +1,32 @@
+---
+
+num_workers: 16
+
+train_parameters:
+  num_epoch: 40
+  lr_g: 0.0001 # Adam learning rate
+  lr_d: 0.0004 # Adam learning rate
+  batch_size: 4
+  lambda_perceptual: 100 # the parameter of FML1Loss (perceptual loss)
+  image_size: 512
+  weight_decay: 0
+  lr_decrease_epoch: 10 # lr decrease at certain epoch and its multiple
+  lr_decrease_factor: 0.5 # lr decrease factor, for classification default 0.1
+  lambda_l1: 256 # the parameter of L1Loss
+
+
+experiment_name: "2020-11-18"
+
+sample_path: "./samples"
+gan_type: "WGAN"
+checkpoint_interval: 1 # interval between model checkpoints
+load_name_g: "" # load model name
+load_name_d: "" # load model name
+
+latent_channels: 32 # latent channels
+pad_type: replicate # the padding type
+activation: elu
+norm1: none
+norm: none
+init_type: kaiming
+init_gain: 0.2
